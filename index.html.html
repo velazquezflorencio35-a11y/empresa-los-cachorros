@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empresa Los Cachorros - Sistema de Reportes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* (El CSS permanece exactamente igual) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        h1 {
+            color: #6c757d;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .company-name {
+            font-size: 3rem;
+            color: #ff9aa2;
+            margin-bottom: 25px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .download-btn {
+            background-color: #a0ced9;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            margin: 5px;
+        }
+        
+        .download-btn:hover {
+            background-color: #8bc2d0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .download-btn:active {
+            transform: translateY(0);
+        }
+        
+        .tables-section {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .table-section {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .table-section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .section-header {
+            padding: 25px;
+            margin: 0;
+            font-size: 1.8rem;
+            text-align: center;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .section-header:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .control-btn {
+            background-color: #ff9aa2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-btn:hover {
+            background-color: #ff7b86;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .remove-btn {
+            background-color: #ff6b6b;
+        }
+        
+        .remove-btn:hover {
+            background-color: #ff5252;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        th, td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            font-weight: 700;
+            font-size: 1.05rem;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        /* Colores pasteles para las tablas */
+        .sales-section .section-header {
+            background-color: #b5ead7; /* Verde pastel */
+            color: #2c5530;
+        }
+        
+        .sales-section th {
+            background-color: #e2f0cb; /* Verde claro pastel */
+            color: #2c5530;
+        }
+        
+        .sales-section tr:nth-child(even) {
+            background-color: #f0f9eb; /* Verde muy claro pastel */
+        }
+        
+        .sales-section tr:hover {
+            background-color: #d4edda; /* Verde pastel para hover */
+        }
+        
+        .costs-section .section-header {
+            background-color: #ffdac1; /* Naranja pastel */
+            color: #8b4513;
+        }
+        
+        .costs-section th {
+            background-color: #ffe5d9; /* Rosa claro pastel */
+            color: #8b4513;
+        }
+        
+        .costs-section tr:nth-child(even) {
+            background-color: #fff5ee; /* Rosa muy claro pastel */
+        }
+        
+        .costs-section tr:hover {
+            background-color: #ffebcd; /* Rosa pastel para hover */
+        }
+        
+        .other-section .section-header {
+            background-color: #c7ceea; /* Azul pastel */
+            color: #1e3a5f;
+        }
+        
+        .other-section th {
+            background-color: #d8e2ff; /* Azul claro pastel */
+            color: #1e3a5f;
+        }
+        
+        .other-section tr:nth-child(even) {
+            background-color: #e8edff; /* Azul muy claro pastel */
+        }
+        
+        .other-section tr:hover {
+            background-color: #d0d9ff; /* Azul pastel para hover */
+        }
+        
+        .production-section .section-header {
+            background-color: #e0bbe4; /* Lila pastel */
+            color: #4a235a;
+        }
+        
+        .production-section th {
+            background-color: #f2d7f2; /* Lila claro pastel */
+            color: #4a235a;
+        }
+        
+        .production-section tr:nth-child(even) {
+            background-color: #f9f0fa; /* Lila muy claro pastel */
+        }
+        
+        .production-section tr:hover {
+            background-color: #ecd9ec; /* Lila pastel para hover */
+        }
+        
+        .empty-row {
+            height: 50px;
+        }
+        
+        .empty-row td {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            color: #6c757d;
+            font-size: 0.95rem;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        
+        /* Estilos para celdas editables */
+        .editable {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        
+        .editable:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .editable:hover::after {
+            content: "✎";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .editing {
+            background-color: #fffacd;
+            border: 1px solid #ffd700;
+        }
+        
+        /* Estilos para valores monetarios */
+        .currency {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        
+        /* Estilos para porcentajes */
+        .percentage {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #6c757d;
+        }
+        
+        /* Estilos para tendencias */
+        .trend-up {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .trend-down {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .trend-neutral {
+            color: #6c757d;
+            font-weight: bold;
+        }
+        
+        /* Mensajes de alerta */
+        .alert {
+            padding: 12px 20px;
+            margin: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Controles globales */
+        .global-controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .global-btn {
+            background-color: #a0ced9;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+        
+        .global-btn:hover {
+            background-color: #8bc2d0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Estilos para la versión de impresión/PDF */
+        .print-version .controls,
+        .print-version .global-controls,
+        .print-version .download-btn {
+            display: none !important;
+        }
+        
+        .print-version .editable:hover::after {
+            display: none;
+        }
+
+        /* Estilos para celdas calculadas */
+        .calculated {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: right;
+            cursor: default;
+        }
+
+        .formula-cell {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        /* Estilos para celdas no editables */
+        .non-editable {
+            cursor: default;
+            background-color: #f8f9fa;
+        }
+
+        .non-editable:hover {
+            background-color: #f8f9fa;
+        }
+
+        .non-editable:hover::after {
+            display: none;
+        }
+
+        /* Estilo para fila seleccionada */
+        tr.selected {
+            background-color: #ffeb3b !important;
+            border: 2px solid #ff9800;
+        }
+
+        tr.selected td {
+            font-weight: bold;
+        }
+
+        /* Selector de idioma */
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .language-selector select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .tables-section {
+                gap: 30px;
+            }
+            
+            .section-header {
+                font-size: 1.5rem;
+                padding: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                padding: 15px;
+            }
+            
+            .control-btn {
+                width: 80%;
+                max-width: 250px;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .company-name {
+                font-size: 2.5rem;
+            }
+            
+            .language-selector {
+                position: static;
+                margin-top: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .company-name {
+                font-size: 2rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="language-selector">
+            <select id="languageSelect">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="zh">中文</option>
+                <option value="pt">Português</option>
+            </select>
+        </div>
+        
+        <header>
+            <h1 class="editable" data-i18n="reports_title">Reportes de Gestión</h1>
+            <div class="company-name editable" data-i18n="company_name">Empresa Los Cachorros</div>
+            <button class="download-btn" id="downloadBtn" data-i18n="download_report">Descargar Reporte</button>
+        </header>
+
+        <div id="alertContainer"></div>
+        
+        <div class="tables-section" id="tablesContainer">
+            <!-- Sección de Ventas Proyectadas -->
+            <div class="table-section sales-section" data-table-number="1">
+                <h2 class="section-header editable" data-i18n="table1_title">Tabla 1: Ventas Proyectadas</h2>
+                
+                <div class="controls">
+                    <button class="control-btn add-row-btn" data-table="projectedSalesTable" data-i18n="add_row">Agregar Fila</button>
+                    <button class="control-btn remove-btn remove-row-btn" data-table="projectedSalesTable" data-i18n="remove_selected">Eliminar Fila Seleccionada</button>
+                </div>
+                
+                <table id="projectedSalesTable">
+                    <thead>
+                        <tr>
+                            <th class="editable" data-i18n="product">Producto</th>
+                            <th class="editable" data-i18n="quantity">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-product-row="1">
+                            <td class="editable product-name" data-row-id="1">Camas chicas</td>
+                            <td class="editable">3185</td>
+                        </tr>
+                        <tr data-product-row="2">
+                            <td class="editable product-name" data-row-id="2">Camas medianas</td>
+                            <td class="editable">3280</td>
+                        </tr>
+                        <tr data-product-row="3">
+                            <td class="editable product-name" data-row-id="3">Camas grandes</td>
+                            <td class="editable">1100</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Sección de Distribución de Ventas -->
+            <div class="table-section costs-section" data-table-number="2">
+                <h2 class="section-header editable" data-i18n="table2_title">Tabla 2: Distribución de Ventas</h2>
+                
+                <div class="controls">
+                    <button class="control-btn add-row-btn" data-table="distributionTable" data-i18n="add_row">Agregar Fila</button>
+                    <button class="control-btn remove-btn remove-row-btn" data-table="distributionTable" data-i18n="remove_selected">Eliminar Fila Seleccionada</button>
+                </div>
+                
+                <table id="distributionTable">
+                    <thead>
+                        <tr>
+                            <th class="editable" data-i18n="quarter">Trimestre</th>
+                            <th class="editable" data-i18n="percentage">Porcentaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-quarter-row="1">
+                            <td class="editable quarter-name" data-quarter-id="1">Uno</td>
+                            <td class="editable percentage">18%</td>
+                        </tr>
+                        <tr data-quarter-row="2">
+                            <td class="editable quarter-name" data-quarter-id="2">Dos</td>
+                            <td class="editable percentage">17%</td>
+                        </tr>
+                        <tr data-quarter-row="3">
+                            <td class="editable quarter-name" data-quarter-id="3">Tres</td>
+                            <td class="editable percentage">20%</td>
+                        </tr>
+                        <tr data-quarter-row="4">
+                            <td class="editable quarter-name" data-quarter-id="4">Cuatro</td>
+                            <td class="editable percentage">15%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Sección de Presupuesto de Ventas -->
+            <div class="table-section other-section" data-table-number="3">
+                <h2 class="section-header editable" data-i18n="table3_title">Tabla 3: Presupuesto de Ventas</h2>
+                
+                <div class="controls">
+                    <!-- Sin botones - se sincroniza automáticamente con Tabla 1 y 2 -->
+                </div>
+                
+                <table id="budgetTable">
+                    <thead>
+                        <tr>
+                            <th class="editable" data-i18n="product">Producto</th>
+                            <th class="editable quarter-header" data-quarter-id="1" data-i18n="quarter_1">Trimestre 1</th>
+                            <th class="editable quarter-header" data-quarter-id="2" data-i18n="quarter_2">Trimestre 2</th>
+                            <th class="editable quarter-header" data-quarter-id="3" data-i18n="quarter_3">Trimestre 3</th>
+                            <th class="editable quarter-header" data-quarter-id="4" data-i18n="quarter_4">Trimestre 4</th>
+                            <th class="editable" data-i18n="total">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se generarán automáticamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Sección de Niveles de Inventario -->
+            <div class="table-section other-section" data-table-number="4">
+                <h2 class="section-header editable" data-i18n="table4_title">Tabla 4: Niveles de Inventario</h2>
+                
+                <div class="controls">
+                    <!-- Sin botones - se sincroniza automáticamente con Tabla 1 -->
+                </div>
+                
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th class="editable" data-i18n="product">Producto</th>
+                            <th class="editable" data-i18n="initial_inventory">Inventario Inicial</th>
+                            <th class="editable" data-i18n="final_inventory">Inventario Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se generarán automáticamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Sección de Presupuesto de Producción -->
+            <div id="productionTablesContainer">
+                <!-- Aquí se agregarán las tablas de producción dinámicamente -->
+            </div>
+        </div>
+        
+        <footer class="editable">
+            <p data-i18n="footer_text">Empresa Los Cachorros ; 2025 - AQUI ESTAMOS PARA CUALQUIER COISA</p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables globales
+        let editingCell = null;
+        let selectedRow = null;
+        let nextProductId = 4;
+        let nextQuarterId = 5;
+        let currentLanguage = 'es';
+
+        // Diccionarios de traducción
+        const translations = {
+            es: {
+                // Títulos
+                'reports_title': 'Reportes de Gestión',
+                'company_name': 'Empresa Los Cachorros',
+                'table1_title': 'Tabla 1: Ventas Proyectadas',
+                'table2_title': 'Tabla 2: Distribución de Ventas',
+                'table3_title': 'Tabla 3: Presupuesto de Ventas',
+                'table4_title': 'Tabla 4: Niveles de Inventario',
+                'production_table_title': 'Tabla $1: Presupuesto de Producción - $2',
+                
+                // Botones
+                'download_report': 'Descargar Reporte',
+                'add_row': 'Agregar Fila',
+                'remove_selected': 'Eliminar Fila Seleccionada',
+                
+                // Encabezados de tabla
+                'product': 'Producto',
+                'quantity': 'Cantidad',
+                'quarter': 'Trimestre',
+                'percentage': 'Porcentaje',
+                'initial_inventory': 'Inventario Inicial',
+                'final_inventory': 'Inventario Final',
+                'total': 'Total',
+                'quarter_1': 'Trimestre 1',
+                'quarter_2': 'Trimestre 2',
+                'quarter_3': 'Trimestre 3',
+                'quarter_4': 'Trimestre 4',
+                
+                // Fórmulas de producción
+                'proposed_sales': 'Ventas Propuestas',
+                'plus_final_inventory': '(+) Inventario Final',
+                'production_needs': '(=) Necesidades de Producción',
+                'minus_initial_inventory': '(-) Inventario Inicial',
+                'required_production': '(=) Producción Requerida',
+                'formulas': 'Fórmulas',
+                
+                // Mensajes
+                'product_added': 'Producto agregado y sincronizado en todas las tablas',
+                'quarter_added': 'Trimestre agregado y sincronizado con Tabla 3',
+                'product_removed': 'Producto eliminado de todas las tablas',
+                'quarter_removed': 'Trimestre eliminado de todas las tablas',
+                'select_row_first': 'Seleccione una fila primero',
+                'cant_remove_last': 'No se puede eliminar la última fila',
+                'numeric_value': 'Por favor ingrese un valor numérico válido',
+                'data_saved': 'Datos guardados en almacenamiento local',
+                'data_loaded': 'Datos cargados desde almacenamiento local',
+                
+                // Pie de página
+                'footer_text': 'Empresa Los Cachorros ; 2025 - AQUI ESTAMOS PARA CUALQUIER COISA'
+            },
+            en: {
+                'reports_title': 'Management Reports',
+                'company_name': 'Los Cachorros Company',
+                'table1_title': 'Table 1: Projected Sales',
+                'table2_title': 'Table 2: Sales Distribution',
+                'table3_title': 'Table 3: Sales Budget',
+                'table4_title': 'Table 4: Inventory Levels',
+                'production_table_title': 'Table $1: Production Budget - $2',
+                'download_report': 'Download Report',
+                'add_row': 'Add Row',
+                'remove_selected': 'Remove Selected Row',
+                'product': 'Product',
+                'quantity': 'Quantity',
+                'quarter': 'Quarter',
+                'percentage': 'Percentage',
+                'initial_inventory': 'Initial Inventory',
+                'final_inventory': 'Final Inventory',
+                'total': 'Total',
+                'quarter_1': 'Quarter 1',
+                'quarter_2': 'Quarter 2',
+                'quarter_3': 'Quarter 3',
+                'quarter_4': 'Quarter 4',
+                'proposed_sales': 'Proposed Sales',
+                'plus_final_inventory': '(+) Final Inventory',
+                'production_needs': '(=) Production Needs',
+                'minus_initial_inventory': '(-) Initial Inventory',
+                'required_production': '(=) Required Production',
+                'formulas': 'Formulas',
+                'product_added': 'Product added and synchronized across all tables',
+                'quarter_added': 'Quarter added and synchronized with Table 3',
+                'product_removed': 'Product removed from all tables',
+                'quarter_removed': 'Quarter removed from all tables',
+                'select_row_first': 'Select a row first',
+                'cant_remove_last': 'Cannot remove the last row',
+                'numeric_value': 'Please enter a valid numeric value',
+                'data_saved': 'Data saved to local storage',
+                'data_loaded': 'Data loaded from local storage',
+                'footer_text': 'Los Cachorros Company ; 2025 - WE ARE HERE FOR ANYTHING'
+            },
+            de: {
+                'reports_title': 'Management-Berichte',
+                'company_name': 'Los Cachorros Unternehmen',
+                'table1_title': 'Tabelle 1: Geplante Verkäufe',
+                'table2_title': 'Tabelle 2: Vertriebsverteilung',
+                'table3_title': 'Tabelle 3: Verkaufsbudget',
+                'table4_title': 'Tabelle 4: Lagerbestände',
+                'production_table_title': 'Tabelle $1: Produktionsbudget - $2',
+                'download_report': 'Bericht herunterladen',
+                'add_row': 'Zeile hinzufügen',
+                'remove_selected': 'Ausgewählte Zeile entfernen',
+                'product': 'Produkt',
+                'quantity': 'Menge',
+                'quarter': 'Quartal',
+                'percentage': 'Prozentsatz',
+                'initial_inventory': 'Anfangsbestand',
+                'final_inventory': 'Endbestand',
+                'total': 'Gesamt',
+                'quarter_1': 'Quartal 1',
+                'quarter_2': 'Quartal 2',
+                'quarter_3': 'Quartal 3',
+                'quarter_4': 'Quartal 4',
+                'proposed_sales': 'Vorgeschlagene Verkäufe',
+                'plus_final_inventory': '(+) Endbestand',
+                'production_needs': '(=) Produktionsbedarf',
+                'minus_initial_inventory': '(-) Anfangsbestand',
+                'required_production': '(=) Erforderliche Produktion',
+                'formulas': 'Formeln',
+                'product_added': 'Produkt hinzugefügt y über alle Tabellen synchronisiert',
+                'quarter_added': 'Quartal hinzugefügt y mit Tabelle 3 synchronisiert',
+                'product_removed': 'Produkt aus allen Tabellen entfernt',
+                'quarter_removed': 'Quartal aus allen Tabellen entfernt',
+                'select_row_first': 'Zuerst eine Zeile auswählen',
+                'cant_remove_last': 'Letzte Zeile kann nicht entfernt werden',
+                'numeric_value': 'Bitte geben Sie einen gültigen numerischen Wert ein',
+                'data_saved': 'Daten im lokalen Speicher gespeichert',
+                'data_loaded': 'Daten aus dem lokalen Speicher geladen',
+                'footer_text': 'Los Cachorros Unternehmen ; 2025 - WIR SIND FÜR ALLES DA'
+            },
+            zh: {
+                'reports_title': '管理报告',
+                'company_name': '小狗公司',
+                'table1_title': '表1: 预计销售额',
+                'table2_title': '表2: 销售分布',
+                'table3_title': '表3: 销售预算',
+                'table4_title': '表4: 库存水平',
+                'production_table_title': '表$1: 生产预算 - $2',
+                'download_report': '下载报告',
+                'add_row': '添加行',
+                'remove_selected': '删除选定行',
+                'product': '产品',
+                'quantity': '数量',
+                'quarter': '季度',
+                'percentage': '百分比',
+                'initial_inventory': '期初库存',
+                'final_inventory': '期末库存',
+                'total': '总计',
+                'quarter_1': '第一季度',
+                'quarter_2': '第二季度',
+                'quarter_3': '第三季度',
+                'quarter_4': '第四季度',
+                'proposed_sales': '拟议销售额',
+                'plus_final_inventory': '(+) 期末库存',
+                'production_needs': '(=) 生产需求',
+                'minus_initial_inventory': '(-) 期初库存',
+                'required_production': '(=) 所需生产量',
+                'formulas': '公式',
+                'product_added': '产品已添加并在所有表格中同步',
+                'quarter_added': '季度已添加并与表3同步',
+                'product_removed': '产品已从所有表格中移除',
+                'quarter_removed': '季度已从所有表格中移除',
+                'select_row_first': '请先选择一行',
+                'cant_remove_last': '无法删除最后一行',
+                'numeric_value': '请输入有效的数值',
+                'data_saved': '数据已保存到本地存储',
+                'data_loaded': '数据已从本地存储加载',
+                'footer_text': '小狗公司 ; 2025 - 我们随时为您服务'
+            },
+            pt: {
+                'reports_title': 'Relatórios de Gestão',
+                'company_name': 'Empresa Los Cachorros',
+                'table1_title': 'Tabela 1: Vendas Projetadas',
+                'table2_title': 'Tabela 2: Distribuição de Vendas',
+                'table3_title': 'Tabela 3: Orçamento de Vendas',
+                'table4_title': 'Tabela 4: Níveis de Inventário',
+                'production_table_title': 'Tabela $1: Orçamento de Produção - $2',
+                'download_report': 'Baixar Relatório',
+                'add_row': 'Adicionar Linha',
+                'remove_selected': 'Remover Linha Selecionada',
+                'product': 'Produto',
+                'quantity': 'Quantidade',
+                'quarter': 'Trimestre',
+                'percentage': 'Porcentagem',
+                'initial_inventory': 'Inventário Inicial',
+                'final_inventory': 'Inventário Final',
+                'total': 'Total',
+                'quarter_1': 'Trimestre 1',
+                'quarter_2': 'Trimestre 2',
+                'quarter_3': 'Trimestre 3',
+                'quarter_4': 'Trimestre 4',
+                'proposed_sales': 'Vendas Propostas',
+                'plus_final_inventory': '(+) Inventário Final',
+                'production_needs': '(=) Necessidades de Produção',
+                'minus_initial_inventory': '(-) Inventário Inicial',
+                'required_production': '(=) Produção Requerida',
+                'formulas': 'Fórmulas',
+                'product_added': 'Produto adicionado e sincronizado em todas as tabelas',
+                'quarter_added': 'Trimestre adicionado e sincronizado com a Tabela 3',
+                'product_removed': 'Produto removido de todas as tabelas',
+                'quarter_removed': 'Trimestre removido de todas as tabelas',
+                'select_row_first': 'Selecione uma linha primeiro',
+                'cant_remove_last': 'Não é possível remover a última linha',
+                'numeric_value': 'Por favor, insira um valor numérico válido',
+                'data_saved': 'Dados salvos no armazenamento local',
+                'data_loaded': 'Dados carregados do armazenamento local',
+                'footer_text': 'Empresa Los Cachorros ; 2025 - ESTAMOS AQUI PARA QUALQUER COISA'
+            }
+        };
+
+        // Función para traducir texto
+        function translateText(text, lang = currentLanguage) {
+            if (!text || !translations[lang]) return text;
+            
+            // Manejar texto con parámetros (ej: "Tabla $1: Presupuesto de Producción - $2")
+            if (text.includes('$1') || text.includes('$2')) {
+                return text;
+            }
+            
+            return translations[lang][text] || text;
+        }
+
+        // Función para aplicar traducción a elementos con data-i18n
+        function applyTranslation(lang = currentLanguage) {
+            currentLanguage = lang;
+            
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    const translatedText = translateText(key, lang);
+                    
+                    // Para títulos de tablas de producción que tienen parámetros
+                    if (element.classList.contains('section-header') && element.textContent.includes('Presupuesto de Producción')) {
+                        // Mantener el formato con números y nombres
+                        const match = element.textContent.match(/Tabla (\d+): Presupuesto de Producción - (.+)/);
+                        if (match) {
+                            const tableNum = match[1];
+                            const productName = match[2];
+                            const template = translations[lang]['production_table_title'] || 'Table $1: Production Budget - $2';
+                            element.textContent = template.replace('$1', tableNum).replace('$2', productName);
+                        }
+                    } else {
+                        element.textContent = translatedText;
+                    }
+                }
+            });
+        }
+
+        // Función para mostrar alertas traducidas
+        function showAlert(messageKey, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = translateText(messageKey);
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // FUNCIÓN PARA GUARDAR DATOS EN LOCALSTORAGE
+        function saveDataToLocalStorage() {
+            try {
+                const data = {
+                    // Guardar Tabla 1
+                    projectedSalesTable: Array.from(document.querySelectorAll('#projectedSalesTable tbody tr')).map(row => ({
+                        id: row.getAttribute('data-product-row'),
+                        name: row.querySelector('.product-name').textContent,
+                        quantity: row.querySelector('td:nth-child(2)').textContent
+                    })),
+                    
+                    // Guardar Tabla 2
+                    distributionTable: Array.from(document.querySelectorAll('#distributionTable tbody tr')).map(row => ({
+                        id: row.getAttribute('data-quarter-row'),
+                        name: row.querySelector('.quarter-name').textContent,
+                        percentage: row.querySelector('.percentage').textContent
+                    })),
+                    
+                    // Guardar Tabla 4
+                    inventoryTable: Array.from(document.querySelectorAll('#inventoryTable tbody tr')).map(row => ({
+                        id: row.getAttribute('data-product-row'),
+                        name: row.querySelector('.product-name').textContent,
+                        initial: row.querySelector('td:nth-child(2)').textContent,
+                        final: row.querySelector('td:nth-child(3)').textContent
+                    })),
+                    
+                    // Guardar tablas de producción
+                    productionTables: Array.from(document.querySelectorAll('.production-section')).map(section => {
+                        const productId = section.getAttribute('data-product-id');
+                        const table = document.getElementById(`productionBudgetTable${productId}`);
+                        if (!table) return null;
+                        
+                        const rows = Array.from(table.querySelectorAll('tbody tr'));
+                        return {
+                            productId: productId,
+                            productName: section.querySelector('.section-header').textContent.replace(/^.*Presupuesto de Producción - /, ''),
+                            data: rows.map(row => 
+                                Array.from(row.querySelectorAll('td')).slice(1, 6).map(cell => cell.textContent)
+                            )
+                        };
+                    }).filter(table => table !== null),
+                    
+                    // Guardar contadores
+                    counters: {
+                        nextProductId: nextProductId,
+                        nextQuarterId: nextQuarterId
+                    }
+                };
+                
+                localStorage.setItem('empresaLosCachorrosData', JSON.stringify(data));
+                console.log('Datos guardados en localStorage');
+            } catch (error) {
+                console.error('Error guardando datos:', error);
+            }
+        }
+
+        // FUNCIÓN PARA CARGAR DATOS DESDE LOCALSTORAGE
+        function loadDataFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('empresaLosCachorrosData');
+                if (!savedData) {
+                    console.log('No hay datos guardados');
+                    return false;
+                }
+                
+                const data = JSON.parse(savedData);
+                
+                // Restaurar contadores
+                if (data.counters) {
+                    nextProductId = data.counters.nextProductId || 4;
+                    nextQuarterId = data.counters.nextQuarterId || 5;
+                }
+                
+                // Limpiar tablas existentes
+                document.querySelectorAll('#projectedSalesTable tbody tr').forEach(row => row.remove());
+                document.querySelectorAll('#distributionTable tbody tr').forEach(row => row.remove());
+                document.querySelectorAll('#inventoryTable tbody tr').forEach(row => row.remove());
+                document.querySelectorAll('#budgetTable tbody tr').forEach(row => row.remove());
+                document.querySelectorAll('.production-section').forEach(section => section.remove());
+                
+                // Restaurar Tabla 1
+                if (data.projectedSalesTable) {
+                    const tbody = document.querySelector('#projectedSalesTable tbody');
+                    data.projectedSalesTable.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-product-row', item.id);
+                        row.innerHTML = `
+                            <td class="editable product-name" data-row-id="${item.id}">${item.name}</td>
+                            <td class="editable">${item.quantity}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                // Restaurar Tabla 2
+                if (data.distributionTable) {
+                    const tbody = document.querySelector('#distributionTable tbody');
+                    data.distributionTable.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-quarter-row', item.id);
+                        row.innerHTML = `
+                            <td class="editable quarter-name" data-quarter-id="${item.id}">${item.name}</td>
+                            <td class="editable percentage">${item.percentage}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                // Restaurar Tabla 4
+                if (data.inventoryTable) {
+                    const tbody = document.querySelector('#inventoryTable tbody');
+                    data.inventoryTable.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-product-row', item.id);
+                        row.innerHTML = `
+                            <td class="editable product-name" data-row-id="${item.id}">${item.name}</td>
+                            <td class="editable">${item.initial}</td>
+                            <td class="editable">${item.final}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                // Inicializar las tablas derivadas
+                initializeTables();
+                
+                // Restaurar tablas de producción
+                if (data.productionTables) {
+                    setTimeout(() => {
+                        data.productionTables.forEach(tableData => {
+                            // Encontrar la tabla de producción existente o crear una nueva
+                            let productionSection = document.querySelector(`[data-product-id="${tableData.productId}"]`);
+                            
+                            if (!productionSection) {
+                                createProductionTable(tableData.productId, tableData.productName);
+                                productionSection = document.querySelector(`[data-product-id="${tableData.productId}"]`);
+                            }
+                            
+                            if (productionSection && tableData.data) {
+                                const table = document.getElementById(`productionBudgetTable${tableData.productId}`);
+                                if (table) {
+                                    const rows = table.querySelectorAll('tbody tr');
+                                    tableData.data.forEach((rowData, rowIndex) => {
+                                        if (rows[rowIndex]) {
+                                            const cells = rows[rowIndex].querySelectorAll('td');
+                                            rowData.forEach((cellData, cellIndex) => {
+                                                if (cells[cellIndex + 1]) { // +1 para saltar la celda de fórmula
+                                                    cells[cellIndex + 1].textContent = cellData;
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }, 100);
+                }
+                
+                console.log('Datos cargados desde localStorage');
+                showAlert('data_loaded');
+                return true;
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                return false;
+            }
+        }
+
+        // MODIFICACIÓN: Guardar datos cuando cambien
+        function saveOnChange() {
+            saveDataToLocalStorage();
+        }
+
+        // CORREGIDO: Función para actualizar nombre de trimestre en Tabla 3
+        function updateQuarterNameInTable3(quarterId, newName) {
+            // Actualizar en Tabla 3 - encabezados
+            const quarterHeaders = document.querySelectorAll(`#budgetTable th[data-quarter-id="${quarterId}"]`);
+            quarterHeaders.forEach(header => {
+                header.textContent = newName;
+            });
+            
+            // Actualizar también en tablas de producción
+            document.querySelectorAll('.production-section').forEach(section => {
+                const quarterHeadersProd = section.querySelectorAll(`th[data-quarter-id="${quarterId}"]`);
+                quarterHeadersProd.forEach(header => {
+                    header.textContent = newName;
+                });
+            });
+        }
+
+        // CORREGIDO: Función para verificar y sincronizar trimestres entre Tabla 2 y Tabla 3
+        function syncQuartersBetweenTables() {
+            const distributionTable = document.getElementById('distributionTable');
+            const budgetTable = document.getElementById('budgetTable');
+            
+            const quarterRows = distributionTable.querySelectorAll('tbody tr');
+            const quarterHeaders = budgetTable.querySelectorAll('th.quarter-header');
+            
+            // Si hay diferente cantidad, ajustar Tabla 3 para que coincida con Tabla 2
+            if (quarterRows.length !== quarterHeaders.length) {
+                const quarterCount = quarterRows.length;
+                
+                // Obtener encabezados actuales de Tabla 3
+                const currentHeaders = Array.from(quarterHeaders);
+                const currentCount = currentHeaders.length;
+                
+                if (quarterCount > currentCount) {
+                    // Agregar trimestres faltantes a Tabla 3
+                    for (let i = currentCount; i < quarterCount; i++) {
+                        const quarterRow = quarterRows[i];
+                        if (quarterRow) {
+                            const quarterId = quarterRow.getAttribute('data-quarter-row');
+                            const quarterName = quarterRow.querySelector('.quarter-name').textContent;
+                            addQuarterToTable3(quarterId, quarterName);
+                        }
+                    }
+                } else if (quarterCount < currentCount) {
+                    // Eliminar trimestres sobrantes de Tabla 3
+                    for (let i = currentCount - 1; i >= quarterCount; i--) {
+                        const headerToRemove = currentHeaders[i];
+                        if (headerToRemove) {
+                            const quarterId = headerToRemove.getAttribute('data-quarter-id');
+                            removeQuarterFromTable3(quarterId);
+                        }
+                    }
+                }
+                
+                // Actualizar tablas de producción
+                updateProductionTablesStructure();
+            }
+        }
+
+        // CORREGIDO: Función para actualizar estructura de tablas de producción
+        function updateProductionTablesStructure() {
+            const quarterCount = document.querySelectorAll('#distributionTable tbody tr').length;
+            
+            // Para cada tabla de producción
+            document.querySelectorAll('.production-section').forEach(section => {
+                const table = section.querySelector('table');
+                if (!table) return;
+                
+                // Obtener encabezados actuales
+                const thead = table.querySelector('thead tr');
+                const currentQuarterHeaders = thead.querySelectorAll('th.quarter-header');
+                const totalHeader = thead.querySelector('th:last-child');
+                
+                // Eliminar todos los encabezados de trimestre
+                currentQuarterHeaders.forEach(header => header.remove());
+                
+                // Agregar nuevos encabezados según Tabla 2
+                const quarterRows = document.querySelectorAll('#distributionTable tbody tr');
+                
+                quarterRows.forEach((quarterRow, index) => {
+                    const quarterId = quarterRow.getAttribute('data-quarter-row');
+                    const quarterName = quarterRow.querySelector('.quarter-name').textContent;
+                    
+                    const newTh = document.createElement('th');
+                    newTh.className = 'editable quarter-header';
+                    newTh.setAttribute('data-quarter-id', quarterId);
+                    newTh.textContent = quarterName;
+                    
+                    // Insertar antes del total
+                    thead.insertBefore(newTh, totalHeader);
+                });
+                
+                // Actualizar filas del cuerpo
+                const tbodyRows = table.querySelectorAll('tbody tr');
+                tbodyRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const formulaCell = cells[0];
+                    const totalCell = cells[cells.length - 1];
+                    
+                    // Eliminar celdas de trimestres
+                    for (let i = 1; i < cells.length - 1; i++) {
+                        cells[i].remove();
+                    }
+                    
+                    // Agregar nuevas celdas de trimestres
+                    for (let i = 0; i < quarterCount; i++) {
+                        const newTd = document.createElement('td');
+                        if (row.querySelector('.formula-cell')) {
+                            // Si es fila de fórmula
+                            if (row.cells[0].textContent.includes('Ventas Propuestas') || 
+                                row.cells[0].textContent.includes('Inventario Final') || 
+                                row.cells[0].textContent.includes('Inventario Inicial')) {
+                                newTd.className = 'editable';
+                                newTd.textContent = '0';
+                            } else {
+                                newTd.className = 'calculated non-editable';
+                                newTd.textContent = '0';
+                            }
+                        } else {
+                            newTd.className = 'calculated non-editable';
+                            newTd.textContent = '0';
+                        }
+                        
+                        // Insertar antes del total
+                        row.insertBefore(newTd, totalCell);
+                    }
+                });
+            });
+        }
+
+        // Función para agregar fila a la Tabla 1
+        function addRowToTable1() {
+            const table = document.getElementById('projectedSalesTable');
+            const tbody = table.querySelector('tbody');
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-product-row', nextProductId);
+            
+            newRow.innerHTML = `
+                <td class="editable product-name" data-row-id="${nextProductId}">${translateText('product')} ${nextProductId}</td>
+                <td class="editable">0</td>
+            `;
+            
+            tbody.appendChild(newRow);
+            
+            // Agregar event listeners
+            newRow.querySelectorAll('.editable').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('blur', saveOnChange);
+            });
+            newRow.addEventListener('click', selectRow);
+            
+            // Sincronizar con otras tablas
+            addProductToTable3(nextProductId, `${translateText('product')} ${nextProductId}`);
+            addProductToTable4(nextProductId, `${translateText('product')} ${nextProductId}`);
+            createProductionTable(nextProductId, `${translateText('product')} ${nextProductId}`);
+            
+            nextProductId++;
+            
+            showAlert('product_added');
+            calculateAllTables();
+            saveOnChange(); // Guardar después de agregar
+        }
+
+        // CORREGIDO: Función para agregar fila a la Tabla 2
+        function addRowToTable2() {
+            const table = document.getElementById('distributionTable');
+            const tbody = table.querySelector('tbody');
+            
+            const quarterNames = ['Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho'];
+            const quarterName = quarterNames[nextQuarterId - 1] || `${translateText('quarter')} ${nextQuarterId}`;
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-quarter-row', nextQuarterId);
+            
+            newRow.innerHTML = `
+                <td class="editable quarter-name" data-quarter-id="${nextQuarterId}">${quarterName}</td>
+                <td class="editable percentage">0%</td>
+            `;
+            
+            tbody.appendChild(newRow);
+            
+            // Agregar event listeners
+            newRow.querySelectorAll('.editable').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('blur', saveOnChange);
+            });
+            newRow.addEventListener('click', selectRow);
+            
+            // Sincronizar con Tabla 3 y tablas de producción
+            syncQuartersBetweenTables();
+            
+            nextQuarterId++;
+            
+            showAlert('quarter_added');
+            calculateAllTables();
+            saveOnChange(); // Guardar después de agregar
+        }
+
+        // Función para agregar producto a la Tabla 3
+        function addProductToTable3(productId, productName) {
+            const table = document.getElementById('budgetTable');
+            const tbody = table.querySelector('tbody');
+            
+            // Obtener número de trimestres de Tabla 2
+            const quarterRows = document.querySelectorAll('#distributionTable tbody tr');
+            const quarterCount = quarterRows.length;
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-product-row', productId);
+            
+            let rowHTML = `<td class="editable product-name" data-row-id="${productId}">${productName}</td>`;
+            
+            // Agregar columnas para cada trimestre
+            for (let i = 0; i < quarterCount; i++) {
+                rowHTML += `<td class="currency non-editable">$0,00</td>`;
+            }
+            
+            // Agregar columna Total
+            rowHTML += `<td class="currency non-editable">$0,00</td>`;
+            
+            newRow.innerHTML = rowHTML;
+            tbody.appendChild(newRow);
+        }
+
+        // Función para agregar trimestre a la Tabla 3
+        function addQuarterToTable3(quarterId, quarterName) {
+            const table = document.getElementById('budgetTable');
+            const thead = table.querySelector('thead tr');
+            const tbodyRows = table.querySelectorAll('tbody tr');
+            
+            // Agregar columna al encabezado
+            const newTh = document.createElement('th');
+            newTh.className = 'editable quarter-header';
+            newTh.setAttribute('data-quarter-id', quarterId);
+            newTh.textContent = quarterName;
+            
+            // Insertar antes de la columna Total
+            const totalTh = thead.querySelector('th:last-child');
+            thead.insertBefore(newTh, totalTh);
+            
+            // Agregar columna a cada fila del cuerpo
+            tbodyRows.forEach(row => {
+                const newTd = document.createElement('td');
+                newTd.className = 'currency non-editable';
+                newTd.textContent = '$0,00';
+                
+                // Insertar antes de la columna Total
+                const totalTd = row.querySelector('td:last-child');
+                row.insertBefore(newTd, totalTd);
+            });
+        }
+
+        // Función para agregar producto a la Tabla 4
+        function addProductToTable4(productId, productName) {
+            const table = document.getElementById('inventoryTable');
+            const tbody = table.querySelector('tbody');
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-product-row', productId);
+            
+            newRow.innerHTML = `
+                <td class="editable product-name" data-row-id="${productId}">${productName}</td>
+                <td class="editable">0</td>
+                <td class="editable">0</td>
+            `;
+            
+            tbody.appendChild(newRow);
+            
+            // Agregar event listeners
+            newRow.querySelectorAll('.editable').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('blur', saveOnChange);
+            });
+        }
+
+        // CORREGIDO: Función para crear tabla de producción para un producto
+        function createProductionTable(productId, productName) {
+            const container = document.getElementById('productionTablesContainer');
+            
+            // Obtener cantidad de trimestres de Tabla 2
+            const quarterCount = document.querySelectorAll('#distributionTable tbody tr').length;
+            
+            const newTableSection = document.createElement('div');
+            newTableSection.className = 'table-section production-section';
+            newTableSection.setAttribute('data-table-number', document.querySelectorAll('.table-section').length + 1);
+            newTableSection.setAttribute('data-product-id', productId);
+            
+            const tableNumber = container.children.length + 5;
+            const tableTitle = translateText('production_table_title').replace('$1', tableNumber).replace('$2', productName);
+            
+            // Construir encabezados dinámicamente según trimestres
+            let quarterHeadersHTML = '';
+            document.querySelectorAll('#distributionTable tbody tr').forEach((quarterRow, index) => {
+                const quarterId = quarterRow.getAttribute('data-quarter-row');
+                const quarterName = quarterRow.querySelector('.quarter-name').textContent;
+                quarterHeadersHTML += `<th class="editable quarter-header" data-quarter-id="${quarterId}">${quarterName}</th>`;
+            });
+            
+            // Construir filas con celdas dinámicas según trimestres
+            let tableRowsHTML = '';
+            const formulas = [
+                translateText('proposed_sales'),
+                translateText('plus_final_inventory'),
+                translateText('production_needs'),
+                translateText('minus_initial_inventory'),
+                translateText('required_production')
+            ];
+            
+            formulas.forEach((formula, rowIndex) => {
+                tableRowsHTML += `<tr>`;
+                tableRowsHTML += `<td class="formula-cell" data-i18n="${formula}">${formula}</td>`;
+                
+                // Agregar celdas para cada trimestre
+                for (let i = 0; i < quarterCount; i++) {
+                    if (rowIndex === 0 || rowIndex === 1 || rowIndex === 3) {
+                        // Filas editables: Ventas Propuestas, Inventario Final, Inventario Inicial
+                        tableRowsHTML += `<td class="editable">0</td>`;
+                    } else {
+                        // Filas calculadas: Necesidades de Producción, Producción Requerida
+                        tableRowsHTML += `<td class="calculated non-editable">0</td>`;
+                    }
+                }
+                
+                // Celda de total
+                tableRowsHTML += `<td class="calculated non-editable">0</td>`;
+                tableRowsHTML += `</tr>`;
+            });
+            
+            newTableSection.innerHTML = `
+                <h2 class="section-header editable">${tableTitle}</h2>
+                <div class="controls">
+                    <!-- Sin botones -->
+                </div>
+                <table id="productionBudgetTable${productId}">
+                    <thead>
+                        <tr>
+                            <th class="editable" data-i18n="formulas">${translateText('formulas')}</th>
+                            ${quarterHeadersHTML}
+                            <th class="editable" data-i18n="total">${translateText('total')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRowsHTML}
+                    </tbody>
+                </table>
+            `;
+            
+            container.appendChild(newTableSection);
+            
+            // Agregar event listeners a las celdas editables
+            newTableSection.querySelectorAll('.editable').forEach(cell => {
+                if (!cell.classList.contains('non-editable')) {
+                    cell.addEventListener('click', handleCellClick);
+                    cell.addEventListener('blur', () => {
+                        saveOnChange();
+                        // Recalcular esta tabla específica
+                        const prodTable = cell.closest('table');
+                        if (prodTable && prodTable.id.startsWith('productionBudgetTable')) {
+                            const prodId = prodTable.id.replace('productionBudgetTable', '');
+                            calculateProductionTable(prodId);
+                        }
+                    });
+                }
+            });
+            
+            // Sincronizar datos iniciales
+            setTimeout(() => {
+                updateProductionTables();
+            }, 100);
+        }
+
+        // CORREGIDO: Función para eliminar fila seleccionada de Tabla 1
+        function removeSelectedRowFromTable1() {
+            if (!selectedRow) {
+                showAlert('select_row_first', 'error');
+                return;
+            }
+            
+            const table = document.getElementById('projectedSalesTable');
+            const tbody = table.querySelector('tbody');
+            
+            if (tbody.querySelectorAll('tr').length <= 1) {
+                showAlert('cant_remove_last', 'error');
+                return;
+            }
+            
+            const productId = selectedRow.getAttribute('data-product-row');
+            
+            // Eliminar de Tabla 1
+            tbody.removeChild(selectedRow);
+            selectedRow = null;
+            
+            // Eliminar de otras tablas
+            removeProductFromTable3(productId);
+            removeProductFromTable4(productId);
+            removeProductionTable(productId);
+            
+            showAlert('product_removed');
+            calculateAllTables();
+            saveOnChange(); // Guardar después de eliminar
+        }
+
+        // CORREGIDO: Función para eliminar fila seleccionada de Tabla 2
+        function removeSelectedRowFromTable2() {
+            if (!selectedRow) {
+                showAlert('select_row_first', 'error');
+                return;
+            }
+            
+            const table = document.getElementById('distributionTable');
+            const tbody = table.querySelector('tbody');
+            
+            if (tbody.querySelectorAll('tr').length <= 1) {
+                showAlert('cant_remove_last', 'error');
+                return;
+            }
+            
+            const quarterId = selectedRow.getAttribute('data-quarter-row');
+            
+            // Eliminar de Tabla 2
+            tbody.removeChild(selectedRow);
+            selectedRow = null;
+            
+            // Sincronizar trimestres entre Tabla 2 y Tabla 3
+            syncQuartersBetweenTables();
+            
+            showAlert('quarter_removed');
+            calculateAllTables();
+            saveOnChange(); // Guardar después de eliminar
+        }
+
+        // Función para eliminar producto de Tabla 3
+        function removeProductFromTable3(productId) {
+            const row = document.querySelector(`#budgetTable tr[data-product-row="${productId}"]`);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        // Función para eliminar producto de Tabla 4
+        function removeProductFromTable4(productId) {
+            const row = document.querySelector(`#inventoryTable tr[data-product-row="${productId}"]`);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        // CORREGIDO: Función para eliminar trimestre de Tabla 3
+        function removeQuarterFromTable3(quarterId) {
+            const table = document.getElementById('budgetTable');
+            const thead = table.querySelector('thead tr');
+            const tbodyRows = table.querySelectorAll('tbody tr');
+            
+            // Encontrar el índice de la columna a eliminar
+            let columnIndex = -1;
+            const headers = thead.querySelectorAll('th.quarter-header');
+            headers.forEach((header, index) => {
+                if (header.getAttribute('data-quarter-id') === quarterId) {
+                    columnIndex = index + 1; // +1 porque la primera columna es Producto
+                }
+            });
+            
+            if (columnIndex !== -1) {
+                // Eliminar del encabezado
+                const thToRemove = thead.querySelectorAll('th')[columnIndex];
+                if (thToRemove) thToRemove.remove();
+                
+                // Eliminar de cada fila del cuerpo
+                tbodyRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells[columnIndex]) {
+                        cells[columnIndex].remove();
+                    }
+                });
+            }
+        }
+
+        // Función para eliminar tabla de producción
+        function removeProductionTable(productId) {
+            const tableSection = document.querySelector(`[data-product-id="${productId}"]`);
+            if (tableSection) {
+                tableSection.remove();
+            }
+        }
+
+        // Función para actualizar nombre de producto en todas las tablas
+        function updateProductNameEverywhere(productId, newName) {
+            // Actualizar en Tabla 1
+            const productNameCell1 = document.querySelector(`[data-product-row="${productId}"] .product-name[data-row-id="${productId}"]`);
+            if (productNameCell1) {
+                productNameCell1.textContent = newName;
+            }
+            
+            // Actualizar en Tabla 3
+            const productNameCell3 = document.querySelector(`#budgetTable tr[data-product-row="${productId}"] .product-name[data-row-id="${productId}"]`);
+            if (productNameCell3) {
+                productNameCell3.textContent = newName;
+            }
+            
+            // Actualizar en Tabla 4
+            const productNameCell4 = document.querySelector(`#inventoryTable tr[data-product-row="${productId}"] .product-name[data-row-id="${productId}"]`);
+            if (productNameCell4) {
+                productNameCell4.textContent = newName;
+            }
+            
+            // Actualizar en tabla de producción
+            const productionSection = document.querySelector(`[data-product-id="${productId}"] .section-header`);
+            if (productionSection) {
+                const currentText = productionSection.textContent;
+                const tableNum = currentText.match(/Tabla (\d+):/)?.[1] || 
+                                currentText.match(/Table (\d+):/)?.[1] ||
+                                currentText.match(/Tabelle (\d+):/)?.[1] ||
+                                currentText.match(/表(\d+):/)?.[1] || '?';
+                
+                const template = translateText('production_table_title');
+                productionSection.textContent = template.replace('$1', tableNum).replace('$2', newName);
+            }
+        }
+
+        // CORREGIDO: Función para calcular todas las tablas
+        function calculateAllTables() {
+            calculateBudgetTable();
+            updateProductionTables();
+        }
+
+        // CORREGIDO: Función para calcular Tabla 3
+        function calculateBudgetTable() {
+            const projectedSalesTable = document.getElementById('projectedSalesTable');
+            const distributionTable = document.getElementById('distributionTable');
+            const budgetTable = document.getElementById('budgetTable');
+            
+            // Obtener porcentajes de distribución
+            const percentages = [];
+            distributionTable.querySelectorAll('tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const percentageText = cells[1].textContent;
+                const percentage = parseFloat(percentageText.replace('%', '').replace(',', '.')) / 100;
+                percentages.push(isNaN(percentage) ? 0 : percentage);
+            });
+            
+            // Calcular para cada producto
+            projectedSalesTable.querySelectorAll('tbody tr').forEach((row, rowIndex) => {
+                const budgetRow = budgetTable.querySelectorAll('tbody tr')[rowIndex];
+                if (!budgetRow) return;
+                
+                const projectedSalesText = row.querySelector('td:nth-child(2)').textContent;
+                const projectedSales = parseFloat(projectedSalesText.replace(',', '.')) || 0;
+                
+                const budgetCells = budgetRow.querySelectorAll('td');
+                let total = 0;
+                
+                // Calcular valores por trimestre
+                for (let i = 0; i < percentages.length; i++) {
+                    const budgetValue = projectedSales * percentages[i];
+                    const cellIndex = i + 1; // +1 porque la primera columna es Producto
+                    
+                    if (budgetCells[cellIndex]) {
+                        budgetCells[cellIndex].textContent = formatCurrency(budgetValue);
+                        total += budgetValue;
+                    }
+                }
+                
+                // Actualizar total
+                if (budgetCells[budgetCells.length - 1]) {
+                    budgetCells[budgetCells.length - 1].textContent = formatCurrency(total);
+                }
+            });
+        }
+
+        // CORREGIDO: Función para actualizar tablas de producción
+        function updateProductionTables() {
+            const budgetTable = document.getElementById('budgetTable');
+            const inventoryTable = document.getElementById('inventoryTable');
+            const distributionTable = document.getElementById('distributionTable');
+            
+            // Obtener cantidad de trimestres
+            const quarterCount = distributionTable.querySelectorAll('tbody tr').length;
+            
+            // Para cada fila en la tabla de presupuesto
+            budgetTable.querySelectorAll('tbody tr').forEach((row, rowIndex) => {
+                const productId = row.getAttribute('data-product-row');
+                if (!productId) return;
+                
+                const productionTable = document.getElementById(`productionBudgetTable${productId}`);
+                if (!productionTable) return;
+                
+                // Obtener ventas propuestas de Tabla 3
+                const budgetCells = row.querySelectorAll('td');
+                const salesRow = productionTable.querySelector('tbody tr:first-child');
+                const salesCells = salesRow.querySelectorAll('td');
+                
+                // Actualizar ventas propuestas para cada trimestre
+                for (let i = 1; i <= quarterCount; i++) {
+                    if (salesCells[i] && budgetCells[i]) {
+                        const budgetValue = parseCurrency(budgetCells[i].textContent);
+                        salesCells[i].textContent = budgetValue.toFixed(0); // Cambiado a 0 decimales para cantidades enteras
+                    }
+                }
+                
+                // Obtener inventarios de Tabla 4
+                const inventoryRow = document.querySelector(`#inventoryTable tr[data-product-row="${productId}"]`);
+                if (inventoryRow) {
+                    const inventoryCells = inventoryRow.querySelectorAll('td');
+                    const initInventory = parseFloat(inventoryCells[1].textContent.replace(',', '.')) || 0;
+                    const finalInventory = parseFloat(inventoryCells[2].textContent.replace(',', '.')) || 0;
+                    
+                    // Actualizar inventario final en tabla de producción (2da fila)
+                    const invFinalRow = productionTable.querySelectorAll('tbody tr')[1];
+                    if (invFinalRow) {
+                        const invFinalCells = invFinalRow.querySelectorAll('td');
+                        // Distribuir inventario final entre trimestres
+                        for (let i = 1; i <= quarterCount; i++) {
+                            if (invFinalCells[i]) {
+                                invFinalCells[i].textContent = finalInventory.toFixed(0);
+                            }
+                        }
+                    }
+                    
+                    // Actualizar inventario inicial en tabla de producción (4ta fila)
+                    const invInitRow = productionTable.querySelectorAll('tbody tr')[3];
+                    if (invInitRow) {
+                        const invInitCells = invInitRow.querySelectorAll('td');
+                        // Inventario inicial igual para todos los trimestres
+                        for (let i = 1; i <= quarterCount; i++) {
+                            if (invInitCells[i]) {
+                                invInitCells[i].textContent = initInventory.toFixed(0);
+                            }
+                        }
+                    }
+                }
+                
+                // Calcular esta tabla de producción
+                calculateProductionTable(productId);
+            });
+        }
+
+        // CORREGIDO: Función para calcular una tabla de producción específica
+        function calculateProductionTable(productId) {
+            const table = document.getElementById(`productionBudgetTable${productId}`);
+            if (!table) return;
+            
+            const rows = table.querySelectorAll('tbody tr');
+            const quarterCount = table.querySelectorAll('th.quarter-header').length;
+            
+            // Obtener valores con manejo de errores
+            const ventas = [];
+            const invFinal = [];
+            const invInicial = [];
+            
+            // Ventas propuestas (primer fila)
+            rows[0].querySelectorAll('td').forEach((cell, idx) => {
+                if (idx > 0 && idx <= quarterCount) {
+                    const value = parseFloat(cell.textContent.replace(',', '.')) || 0;
+                    ventas.push(value);
+                }
+            });
+            
+            // Inventario final (segunda fila)
+            rows[1].querySelectorAll('td').forEach((cell, idx) => {
+                if (idx > 0 && idx <= quarterCount) {
+                    const value = parseFloat(cell.textContent.replace(',', '.')) || 0;
+                    invFinal.push(value);
+                }
+            });
+            
+            // Inventario inicial (cuarta fila)
+            rows[3].querySelectorAll('td').forEach((cell, idx) => {
+                if (idx > 0 && idx <= quarterCount) {
+                    const value = parseFloat(cell.textContent.replace(',', '.')) || 0;
+                    invInicial.push(value);
+                }
+            });
+            
+            // Calcular necesidades de producción (tercera fila)
+            const necesidades = [];
+            let totalNecesidades = 0;
+            
+            // Calcular producción requerida (quinta fila)
+            const produccion = [];
+            let totalProduccion = 0;
+            
+            // Totales
+            let totalVentas = 0;
+            let totalInvFinal = 0;
+            let totalInvInicial = 0;
+            
+            for (let i = 0; i < quarterCount; i++) {
+                const venta = ventas[i] || 0;
+                const invF = invFinal[i] || 0;
+                const invI = invInicial[i] || 0;
+                
+                // Necesidades de producción = Ventas propuestas + Inventario final
+                const necesidad = venta + invF;
+                necesidades.push(necesidad);
+                totalNecesidades += necesidad;
+                
+                // Producción requerida = Necesidades de producción - Inventario inicial
+                const prod = necesidad - invI;
+                produccion.push(prod > 0 ? prod : 0);
+                totalProduccion += (prod > 0 ? prod : 0);
+                
+                // Acumular totales
+                totalVentas += venta;
+                totalInvFinal += invF;
+                totalInvInicial += invI;
+            }
+            
+            // Actualizar tabla con cálculos correctos
+            
+            // Ventas total (primera fila, última columna)
+            rows[0].querySelector('td:last-child').textContent = totalVentas.toFixed(0);
+            
+            // Inventario final total (segunda fila, última columna)
+            rows[1].querySelector('td:last-child').textContent = totalInvFinal.toFixed(0);
+            
+            // Necesidades de producción (tercera fila)
+            rows[2].querySelectorAll('td').forEach((cell, idx) => {
+                if (idx > 0 && idx <= quarterCount) {
+                    cell.textContent = necesidades[idx-1].toFixed(0);
+                }
+            });
+            rows[2].querySelector('td:last-child').textContent = totalNecesidades.toFixed(0);
+            
+            // Inventario inicial total (cuarta fila, última columna)
+            rows[3].querySelector('td:last-child').textContent = totalInvInicial.toFixed(0);
+            
+            // Producción requerida (quinta fila)
+            rows[4].querySelectorAll('td').forEach((cell, idx) => {
+                if (idx > 0 && idx <= quarterCount) {
+                    cell.textContent = produccion[idx-1].toFixed(0);
+                }
+            });
+            rows[4].querySelector('td:last-child').textContent = totalProduccion.toFixed(0);
+            
+            // Guardar después de calcular
+            saveOnChange();
+        }
+
+        // Función para formatear moneda
+        function formatCurrency(value) {
+            if (isNaN(value)) return '$0,00';
+            return '$' + value.toLocaleString('es-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Función para parsear moneda
+        function parseCurrency(value) {
+            if (!value) return 0;
+            const num = parseFloat(value.toString().replace(/[^\d.,]/g, '').replace(',', '.'));
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Función para seleccionar fila
+        function selectRow(event) {
+            const row = event.target.closest('tr');
+            if (!row) return;
+            
+            document.querySelectorAll('tr.selected').forEach(r => {
+                r.classList.remove('selected');
+            });
+            
+            row.classList.add('selected');
+            selectedRow = row;
+        }
+
+        // Función para manejar clics en celdas editables
+        function handleCellClick(event) {
+            const cell = event.target;
+            if (cell.classList.contains('non-editable')) return;
+            if (cell === editingCell) return;
+            
+            if (editingCell) {
+                finishEditing();
+            }
+            
+            startEditing(cell);
+        }
+
+        // Función para comenzar edición
+        function startEditing(cell) {
+            editingCell = cell;
+            let originalContent = cell.textContent;
+            
+            cell.setAttribute('data-original', originalContent);
+            
+            if (cell.classList.contains('percentage')) {
+                originalContent = originalContent.replace('%', '');
+            }
+            
+            cell.classList.add('editing');
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalContent;
+            input.style.width = '100%';
+            input.style.border = 'none';
+            input.style.background = 'transparent';
+            input.style.fontSize = 'inherit';
+            input.style.fontFamily = 'inherit';
+            input.style.textAlign = cell.classList.contains('percentage') ? 'right' : 'left';
+            
+            cell.textContent = '';
+            cell.appendChild(input);
+            
+            input.focus();
+            input.select();
+            
+            input.addEventListener('blur', finishEditing);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    finishEditing();
+                } else if (e.key === 'Escape') {
+                    cancelEditing();
+                }
+            });
+        }
+
+        // CORREGIDO: Función para terminar edición
+        function finishEditing() {
+            if (!editingCell) return;
+            
+            const input = editingCell.querySelector('input');
+            if (input) {
+                let newValue = input.value.trim();
+                
+                // Verificar si es celda de nombre de producto
+                if (editingCell.classList.contains('product-name')) {
+                    const productId = editingCell.getAttribute('data-row-id');
+                    const oldName = editingCell.getAttribute('data-original');
+                    
+                    if (productId && oldName !== newValue) {
+                        updateProductNameEverywhere(productId, newValue);
+                    }
+                }
+                // Verificar si es celda de nombre de trimestre
+                else if (editingCell.classList.contains('quarter-name')) {
+                    const quarterId = editingCell.getAttribute('data-quarter-id');
+                    const oldName = editingCell.getAttribute('data-original');
+                    
+                    if (quarterId && oldName !== newValue) {
+                        updateQuarterNameInTable3(quarterId, newValue);
+                    }
+                }
+                // Verificar si es celda de porcentaje
+                else if (editingCell.classList.contains('percentage')) {
+                    const numValue = parseFloat(newValue.replace(',', '.'));
+                    if (isNaN(numValue)) {
+                        showAlert('numeric_value', 'error');
+                        return;
+                    }
+                    newValue = newValue.replace(',', '.') + '%';
+                }
+                // Verificar si es celda numérica
+                else {
+                    const parentTable = editingCell.closest('table');
+                    if (parentTable && (parentTable.id === 'projectedSalesTable' || 
+                        parentTable.id === 'inventoryTable' || 
+                        parentTable.id.includes('productionBudgetTable'))) {
+                        const numValue = parseFloat(newValue.replace(',', '.'));
+                        if (newValue !== '' && isNaN(numValue)) {
+                            showAlert('numeric_value', 'error');
+                            return;
+                        }
+                        newValue = newValue.replace(',', '.');
+                    }
+                }
+                
+                editingCell.textContent = newValue;
+                
+                // Recalcular tablas si es necesario
+                const parentTable = editingCell.closest('table');
+                if (parentTable) {
+                    if (parentTable.id === 'projectedSalesTable' || parentTable.id === 'distributionTable') {
+                        calculateAllTables();
+                    } else if (parentTable.id === 'inventoryTable') {
+                        updateProductionTables();
+                    } else if (parentTable.id.includes('productionBudgetTable')) {
+                        const productId = parentTable.id.replace('productionBudgetTable', '');
+                        calculateProductionTable(productId);
+                    }
+                }
+                
+                // Guardar después de editar
+                saveOnChange();
+            }
+            
+            editingCell.classList.remove('editing');
+            editingCell = null;
+        }
+
+        // Función para cancelar edición
+        function cancelEditing() {
+            if (!editingCell) return;
+            
+            const savedOriginal = editingCell.getAttribute('data-original');
+            if (savedOriginal) {
+                editingCell.textContent = savedOriginal;
+            }
+            
+            editingCell.classList.remove('editing');
+            editingCell = null;
+        }
+
+        // Función para inicializar las tablas
+        function initializeTables() {
+            // Sincronizar trimestres entre Tabla 2 y Tabla 3
+            syncQuartersBetweenTables();
+            
+            // Inicializar Tabla 3 y 4 con los productos existentes
+            document.querySelectorAll('#projectedSalesTable tbody tr').forEach((row, index) => {
+                const productId = row.getAttribute('data-product-row');
+                const productName = row.querySelector('.product-name').textContent;
+                
+                // Solo agregar si no existe ya
+                if (!document.querySelector(`#budgetTable tr[data-product-row="${productId}"]`)) {
+                    addProductToTable3(productId, productName);
+                }
+                if (!document.querySelector(`#inventoryTable tr[data-product-row="${productId}"]`)) {
+                    addProductToTable4(productId, productName);
+                }
+                
+                // Crear tabla de producción para productos existentes
+                if (!document.querySelector(`[data-product-id="${productId}"]`)) {
+                    createProductionTable(productId, productName);
+                }
+            });
+            
+            // Calcular todas las tablas
+            calculateAllTables();
+            
+            // Agregar event listeners a botones
+            document.querySelectorAll('.add-row-btn[data-table="projectedSalesTable"]').forEach(btn => {
+                btn.addEventListener('click', addRowToTable1);
+            });
+            
+            document.querySelectorAll('.add-row-btn[data-table="distributionTable"]').forEach(btn => {
+                btn.addEventListener('click', addRowToTable2);
+            });
+            
+            document.querySelectorAll('.remove-row-btn[data-table="projectedSalesTable"]').forEach(btn => {
+                btn.addEventListener('click', removeSelectedRowFromTable1);
+            });
+            
+            document.querySelectorAll('.remove-row-btn[data-table="distributionTable"]').forEach(btn => {
+                btn.addEventListener('click', removeSelectedRowFromTable2);
+            });
+            
+            // Agregar event listeners a celdas editables existentes
+            document.querySelectorAll('.editable:not(.non-editable)').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('blur', saveOnChange);
+            });
+            
+            // Agregar event listeners para selección de filas
+            document.querySelectorAll('#projectedSalesTable tbody tr, #distributionTable tbody tr').forEach(row => {
+                row.addEventListener('click', selectRow);
+            });
+            
+            // Botón de descarga
+            document.getElementById('downloadBtn').addEventListener('click', function() {
+                // Implementación de descarga de PDF (mantener la existente)
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                html2canvas(document.querySelector('.container')).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 210;
+                    const pageHeight = 295;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    
+                    doc.save('reporte_empresa_los_cachorros.pdf');
+                });
+            });
+            
+            // Selector de idioma
+            document.getElementById('languageSelect').addEventListener('change', function(e) {
+                const lang = e.target.value;
+                applyTranslation(lang);
+                localStorage.setItem('empresaLosCachorrosLanguage', lang);
+            });
+            
+            // Cargar idioma guardado
+            const savedLanguage = localStorage.getItem('empresaLosCachorrosLanguage') || 'es';
+            document.getElementById('languageSelect').value = savedLanguage;
+            applyTranslation(savedLanguage);
+        }
+
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Primero intentar cargar datos guardados
+            const loaded = loadDataFromLocalStorage();
+            
+            // Si no hay datos guardados, inicializar normalmente
+            if (!loaded) {
+                initializeTables();
+            }
+            
+            // Agregar event listener para guardar antes de cerrar
+            window.addEventListener('beforeunload', saveDataToLocalStorage);
+            
+            // Guardar periódicamente cada 30 segundos
+            setInterval(saveDataToLocalStorage, 30000);
+            
+            // Mostrar mensaje de datos guardados
+            showAlert('data_saved');
+        });
+    </script>
+</body>
+</html>
